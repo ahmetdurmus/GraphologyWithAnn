@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>KTÜ - El Yazısı ile Karakter Analizi</title>
+
+  <!-- Bootstrap Core CSS -->
+  <link href="{{ url_for('static', filename='../static/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- Custom Fonts -->
+  <link href="{{ url_for('static', filename='../static/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+  <link href="{{ url_for('static', filename='../static/vendor/fontawesome-free/css/fontawesome-free.css') }}" rel="stylesheet" type="text/css">
+  
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='../static/css/stylish-portfolio.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='../static/vendor/simple-line-icons/css/simple-line-icons.css') }}" rel="stylesheet">
+
+  <style>
+    .bg-light {
+      background-color: #fff !important;
+    }
+  </style>
+
+</head>
+
+<body id="page-top">
+
+  <!-- Header -->
+  <header class="masthead d-flex">
+    <div class="container text-center my-auto">
+      <h1 class="mb-3">Analize Başla!</h1>
+      <h3><em>El yazınızın karakter analizini yapın!</em></h3>
+      
+      <div class="container">
+        <form action="{{ url_for('homepage') }}" method="POST" id="training_form">  
+          <div id="slide">
+            <div class="row d-flex justify-content-center">
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Öğrenme Katsayısı</label>
+                <input type="number" name="learning_coefficient" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="0.1" min="0" max="1" step=".01" id="inlineFormInput">
+              </div>
+
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Gizli Katman Sayısı</label>
+                <div class="form-group">
+                  <select class="form-control" name="hidden_coefficient_number" id="sel1">
+                    <option>1</option>
+                    <option>2</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Maks. Hata Sınırı</label>
+                <input type="number" name="max_error_limit" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="0.001" min="0" max="1" step=".01" id="inlineFormInput">
+              </div>
+            </div>
+
+            <div class="row d-flex justify-content-center">
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Giriş / Nöron Sayısı</label>
+                <input type="number" name="enter_number" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="625" min="0" id="inlineFormInput">
+              </div>
+
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Gizli / Nöron Sayısı</label>
+                <div class="d-flex justify-content-center">
+                  <input type="number" name="first_intermediate_layer_number" class="form-control" min="0" placeholder="40" id="inlineFormInputGroup">
+                  <input type="number" name="second_intermediate_layer_number" class="form-control" min="0" placeholder="20">
+                </div>
+              </div>
+                
+              <div class="form-check mb-2 mr-sm-1 mb-sm-0 col-md-2">
+                <label for="example-number-input" class="col-form-label mr-1">Çıkış / Nöron Sayısı</label>
+                <input type="number" name="output_layer_number" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="9" min="0" id="inlineFormInput">
+              </div>
+            </div>
+          </div>
+
+          <div class="row d-flex justify-content-center">
+            <div class="form-group mt-4">
+              <input type="checkbox" class="pull-center mb-3" id="training"> Sistemi Eğit!
+              <div class="pull-center">
+                <input type="submit" name="start_training" class="btn btn-primary btn-xl mb-2 mr-sm-2 mb-sm-0" value="Eğitimi Başlat">
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <form action="{{ url_for('homepage') }}" method="POST" id="analysis_form">
+          <div class="row d-flex justify-content-center">
+            <div class="input-group col-md-6 mt-2">
+              <div class="custom-file" id="image_path">
+                <input type="file" name="image_path" class="custom-file-input" id="inputGroupFile04">
+                <label class="custom-file-label" for="inputGroupFile04">Resim Yükle</label>
+              </div>
+            </div>
+          </div>
+          <input type="submit" name="start_analysis" class="btn btn-primary btn-xl mt-2 mr-sm-2 mb-sm-0" value="Analizi Başlat">
+        </form>
+      </div>
+    </div>
+    <div class="overlay"></div>
+  </header>
+  {% if lossList %}
+  <!-- Chart -->
+  <section class="content-section bg-light" id="about">
+    <div class="container text-center">
+      <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+    </div>
+    <center class="mt-3 mb-3"><b>Öğrenme Katsayısı: </b> {{ learning_coefficient }}, <b>Maksimum Hata Sınırı: </b> {{ max_error_limit }}</center>
+    <center class="mt-3"><q>Bilgi: Yapay sinir ağı, <b>{{ hidden_coefficient_number }} </b>gizli katmanlı olarak <b>{{ iteration }}</b> iterasyon sonucunda eğitildi.</q></center>
+  </section>
+  {% else %}
+
+    <div class="container">
+      <div class="col-md-12">
+        <div class="row d-flex justify-content-center">
+          {% for c in character_analysis %}
+
+          <div class="card text-white {{ c[1] }} mt-5 mb-3 mr-3" style="max-width: 18rem;">
+            <div class="card-header">{{ c[0] }}</div>
+            <div class="card-body">
+              <p class="card-text">{{ c[2] }}</p>
+            </div>
+          </div>
+
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  {% endif %}
+
+  
+  <!-- Footer -->
+  <footer class="footer text-center">
+    <div class="container">
+      <ul class="list-inline mb-5">
+        <li class="list-inline-item">
+          <a class="social-link rounded-circle text-white mr-3" href="#">
+            <i class="icon-social-facebook"></i>
+          </a>
+        </li>
+        <li class="list-inline-item">
+          <a class="social-link rounded-circle text-white mr-3" href="#">
+            <i class="icon-social-twitter"></i>
+          </a>
+        </li>
+        <li class="list-inline-item">
+          <a class="social-link rounded-circle text-white" href="#">
+            <i class="icon-social-github"></i>
+          </a>
+        </li>
+      </ul>
+      <p class="text-muted small mb-0">2018-2019 | KTÜ &copy; Bitirme Projesi</p>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded js-scroll-trigger" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="{{ url_for('static', filename='../static/vendor/jquery/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='../static/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+
+  <!-- Plugin JavaScript -->
+  <script src="{{ url_for('static', filename='../static/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+
+  <!-- Custom scripts for this template -->
+  <script src="{{ url_for('static', filename='../static/js/stylish-portfolio.min.js') }}"></script>
+  
+  <script>
+
+    $("#slide").hide();
+    $("[name='start_training']").hide();
+  
+    $("#training").click(() => {
+      
+      var state = $('#training').is(':checked');
+      console.log("state: "+ state);
+      
+      if(state == true){
+        $("#slide").slideDown();
+        $("[name='start_training']").show();
+        $("[name='start_analysis']").hide();
+        $("[name='second_intermediate_layer_number']").hide();
+        $("#image_path").delay(1000).hide();
+      } else {
+        $("[name='start_training']").hide();
+        $("#slide").slideUp();
+        $("[name='start_analysis']").show();
+        $("[name='hidden_coefficient_number']").val("1");
+        $("#image_path").delay(1000).show();
+      }
+
+      $("[name='hidden_coefficient_number']").change(() => {
+          var value= $("[name='hidden_coefficient_number']").val();
+
+          if(value == 2){
+              $("[name='second_intermediate_layer_number']").show();
+          } else {
+              $("[name='second_intermediate_layer_number']").hide();
+          }
+      });
+    });
+
+  </script>
+
+  <script>
+    window.onload = () => {
+    
+    var limit = {{ iteration }};
+    var y = 0;
+    var data = [];
+    var dataSeries = { type: "line" };
+    var dataPoints = [];
+    var lossPoints = [];
+
+    {% for item in lossList %}
+      lossPoints.push({{ item }});
+    {% endfor %}
+
+    for (var i = 0; i < limit; i += 1) {
+
+      dataPoints.push({
+        x: i,
+        y: lossPoints[i]
+      });
+    }
+    dataSeries.dataPoints = dataPoints;
+    data.push(dataSeries);
+
+    //Better to construct options first and then pass it as a parameter
+    var options = {
+      zoomEnabled: true,
+      animationEnabled: true,
+      title: {
+        text: "Tahmini Hata"
+      },
+      axisY: {
+        includeZero: false,
+        lineThickness: 1
+      },
+      data: data  // random data
+    };
+
+    var chart = new CanvasJS.Chart("chartContainer", options);
+    chart.render();
+    }
+  </script>
+  
+  <script src="{{ url_for('static', filename='../static/vendor/canvas/canvasjs.min.js') }}"></script>
+</body>
+</html>
